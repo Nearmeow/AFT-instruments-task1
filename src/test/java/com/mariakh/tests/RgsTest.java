@@ -9,7 +9,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 public class RgsTest {
@@ -31,10 +30,12 @@ public class RgsTest {
     public void test() {
 
         //Закрыть всплывающее окно с подпиской
-        driver = wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("fl-616371")));
-        WebElement overlayCross = driver.findElement(By.xpath("//div[@data-fl-track = 'click-close-login']"));
-        overlayCross.click();
-        driver.switchTo().defaultContent();
+        boolean isFrameClosed = false;
+
+        if (isFrameExist()) {
+            closeFrame();
+            isFrameClosed = true;
+        }
 
         //Закрыть окно с куки
         WebElement cookieAcceptButton = driver.findElement(By.xpath("//button[@class = 'btn--text']"));
@@ -45,6 +46,9 @@ public class RgsTest {
         companyMenu.click();
 
         //Подожать и проверить урл
+        if (!isFrameClosed) {
+            closeFrame();
+        }
         wait.until(ExpectedConditions.urlToBe("https://www.rgs.ru/for-companies"));
         Assert.assertEquals("Не перешли в раздел 'Компаниям'", "https://www.rgs.ru/for-companies", driver.getCurrentUrl());
 
@@ -65,7 +69,8 @@ public class RgsTest {
         );
 
         //Найти кнопку 'Отправить заявку', проверить её кликабельность и кликнуть
-        WebElement sendRequest = driver.findElement(By.xpath("//button[@class = 'action-item btn--basic']"));
+        //WebElement sendRequest = driver.findElement(By.xpath("//button[@class = 'action-item btn--basic']"));
+        WebElement sendRequest = driver.findElement(By.xpath("//a[@class = 'action-item btn--basic']"));
         wait.until(ExpectedConditions.elementToBeClickable(sendRequest));
         sendRequest.click();
 
@@ -82,8 +87,8 @@ public class RgsTest {
 
         //Заполнить номер телефона и проверить, что номер введен
         WebElement phoneField = driver.findElement(By.xpath("//input[@name = 'userTel']"));
-        phoneField.sendKeys("9998887766");
-        Assert.assertEquals("Номера телефонов не совпадают", "+7 (999) 888-7766", phoneField.getAttribute("value"));
+        phoneField.sendKeys("9998887765");
+        Assert.assertEquals("Номера телефонов не совпадают", "+7 (999) 888-7765", phoneField.getAttribute("value"));
 
         //Заполнить адрес и проверить, что адрес введен
         WebElement addressField = driver.findElement(By.xpath("//input[@type = 'text' and contains(@class, 'vue-dadata')]"));
@@ -120,6 +125,21 @@ public class RgsTest {
     @After
     public void after() {
         driver.quit();
+    }
+
+    private boolean isFrameExist() {
+        try {
+            wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("fl-616371")));
+            return true;
+        } catch (TimeoutException ex) {
+            return false;
+        }
+    }
+
+    private void closeFrame() {
+        WebElement overlayCross = driver.findElement(By.xpath("//div[@data-fl-track = 'click-close-login']"));
+        overlayCross.click();
+        driver.switchTo().defaultContent();
     }
 
     private void scrollToElementJs(WebElement element) {
