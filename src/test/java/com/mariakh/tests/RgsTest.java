@@ -29,13 +29,10 @@ public class RgsTest {
     @Test
     public void test() {
 
-        //Закрыть всплывающее окно с подпиской
-        boolean isFrameClosed = false;
+        //Провверить наличие всплывающего окна с подпиской и при наличии закрыть его
+        boolean isSwitchToFrame = isSwitchToFrame();
 
-        if (isFrameExist()) {
-            closeFrame();
-            isFrameClosed = true;
-        }
+        closeFrameIfSwitched(isSwitchToFrame);
 
         //Закрыть окно с куки
         WebElement cookieAcceptButton = driver.findElement(By.xpath("//button[@class = 'btn--text']"));
@@ -45,10 +42,11 @@ public class RgsTest {
         WebElement companyMenu = driver.findElement(By.xpath("//a[@href = '/for-companies']"));
         companyMenu.click();
 
-        //Подожать и проверить урл
-        if (!isFrameClosed) {
-            closeFrame();
+        if (!isSwitchToFrame) {
+            closeFrameIfSwitched(isSwitchToFrame());
         }
+
+        //Подожать и проверить урл
         wait.until(ExpectedConditions.urlToBe("https://www.rgs.ru/for-companies"));
         Assert.assertEquals("Не перешли в раздел 'Компаниям'", "https://www.rgs.ru/for-companies", driver.getCurrentUrl());
 
@@ -127,12 +125,18 @@ public class RgsTest {
         driver.quit();
     }
 
-    private boolean isFrameExist() {
+    private boolean isSwitchToFrame() {
         try {
             wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("fl-616371")));
             return true;
         } catch (TimeoutException ex) {
             return false;
+        }
+    }
+
+    private void closeFrameIfSwitched(boolean isSwitchedToFrame) {
+        if (isSwitchedToFrame) {
+            closeFrame();
         }
     }
 
